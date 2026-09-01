@@ -144,9 +144,9 @@ export function AdminNav({ adminName }: { adminName: string }) {
       </aside>
 
       {/* Mobile top bar */}
-      <header className="liquid-glass fixed inset-x-0 top-0 z-40 flex h-[56px] items-center justify-between border-b px-4 safe-top md:hidden">
+      <header className="liquid-glass fixed inset-x-0 top-0 z-40 flex h-[56px] items-center justify-between border-b px-4 md:hidden">
         <span className="text-[16px] font-extrabold tracking-tight text-ink">
-          FIT<span className="text-brand">WISH</span> <span className="ml-1 align-middle badge badge-brand">ADMIN</span>
+          FIT<span className="text-brand">WISH</span> <span className="ml-2 badge badge-brand">ADMIN</span>
         </span>
         <button onClick={signOut} aria-label="Sign out" className="grid h-10 w-10 place-items-center rounded-xl text-ink-2">
           <LogOut size={17} />
