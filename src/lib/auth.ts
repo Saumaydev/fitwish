@@ -69,13 +69,31 @@ export async function destroySession(): Promise<void> {
 export async function getSessionUser(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
+
+  console.log("[AUTH DEBUG]", {
+    hasCookie: !!token,
+    tokenPrefix: token ? token.slice(0, 8) : null,
+    cookieName: SESSION_COOKIE,
+  });
+
   if (!token) return null;
+
   const rows = await db
     .select({ user: users })
     .from(authSessions)
     .innerJoin(users, eq(authSessions.userId, users.id))
-    .where(and(eq(authSessions.tokenHash, hashToken(token)), gt(authSessions.expiresAt, new Date())))
+    .where(
+      and(
+        eq(authSessions.tokenHash, hashToken(token)),
+        gt(authSessions.expiresAt, new Date())
+      )
+    )
     .limit(1);
+
+  console.log("[AUTH DEBUG] session lookup", {
+    found: rows.length > 0,
+  });
+
   return rows[0]?.user ?? null;
 }
 
