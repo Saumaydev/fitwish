@@ -2,9 +2,21 @@
 
 import Link from "next/link";
 import useSWR from "swr";
-import { CalendarCheck2, CalendarClock, ChevronRight, ClipboardList, UserCheck, Users } from "lucide-react";
+import {
+  Bell,
+  CalendarCheck2,
+  CalendarClock,
+  CalendarDays,
+  ChevronRight,
+  ClipboardList,
+  FlaskConical,
+  PartyPopper,
+  UserCheck,
+  Users,
+} from "lucide-react";
 import { api } from "@/lib/client";
 import { useAuthStore } from "@/stores/app";
+import { fmtDate, daysUntil, timeAgo } from "@/lib/format";
 import { Avatar, Badge, Button, PageHeader, Skeleton, StatCard } from "@/components/ui/core";
 import type { TrainerOverviewDTO } from "@/lib/types";
 
@@ -22,14 +34,28 @@ export default function TrainerHome() {
         title={`Hi ${firstName} 👋`}
         subtitle="Your gym day at a glance"
         right={
-          data && data.pendingRequests.length > 0 ? (
-            <Link href="/app/trainer/requests" className="relative grid h-11 w-11 place-items-center rounded-2xl border border-line bg-surface text-ink-2 shadow-sm">
-              <ClipboardList size={18} />
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[10.5px] font-bold text-white">
-                {data.pendingRequests.length}
-              </span>
+          <div className="flex items-center gap-2">
+            {data && data.pendingRequests.length > 0 && (
+              <Link href="/app/trainer/requests" className="relative grid h-11 w-11 place-items-center rounded-2xl border border-line bg-surface text-ink-2 shadow-sm">
+                <ClipboardList size={18} />
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[10.5px] font-bold text-white">
+                  {data.pendingRequests.length}
+                </span>
+              </Link>
+            )}
+            <Link
+              href="/app/trainer/notifications"
+              aria-label={`Notifications — ${data?.unreadNotifications ?? 0} unread`}
+              className="relative grid h-11 w-11 place-items-center rounded-2xl border border-line bg-surface text-ink-2 shadow-sm transition hover:text-ink"
+            >
+              <Bell size={18} />
+              {Boolean(data?.unreadNotifications) && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[10.5px] font-bold text-white shadow">
+                  {data!.unreadNotifications > 9 ? "9+" : data!.unreadNotifications}
+                </span>
+              )}
             </Link>
-          ) : undefined
+          </div>
         }
       />
 
@@ -39,6 +65,13 @@ export default function TrainerHome() {
           <button className="ml-2 font-semibold text-brand" onClick={() => mutate()}>
             Retry
           </button>
+        </div>
+      )}
+
+      {data?.todayHoliday && (
+        <div className="mb-4 flex items-center gap-2.5 rounded-2xl border border-warn/25 bg-warn/10 px-4 py-3 text-[13px] font-semibold text-warn">
+          <PartyPopper size={16} className="shrink-0" />
+          {data.todayHoliday.name} — {data.todayHoliday.reason ?? "the gym is closed today"}.
         </div>
       )}
 
@@ -137,6 +170,73 @@ export default function TrainerHome() {
             </span>
           </Link>
         </div>
+      )}
+
+      {/* Holiday reminders */}
+      {data && (
+        <section className="mt-6" aria-label="Gym holidays">
+          <div className="mb-2.5 flex items-center gap-2">
+            <CalendarDays size={15} className="text-ink-3" />
+            <h2 className="text-[15px] font-bold tracking-tight text-ink">Upcoming gym holidays</h2>
+          </div>
+          {data.upcomingHolidays.length === 0 ? (
+            <div className="card p-4 text-[13.5px] text-ink-2">No upcoming holidays — the gym stays open.</div>
+          ) : (
+            <div className="space-y-2.5">
+              {data.upcomingHolidays.map((h) => {
+                const days = daysUntil(h.date);
+                return (
+                  <div key={h.id} className="card flex items-center gap-3.5 p-4">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-warn/10 text-warn">
+                      <CalendarDays size={19} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-bold text-ink">{h.name}</p>
+                      <p className="truncate text-[12.5px] text-ink-2">{h.reason || "Gym closed"}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="tabular text-[13.5px] font-bold text-ink">{fmtDate(h.date)}</p>
+                      <Badge tone="warn" className="mt-1">
+                        {days === 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days} days`}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Notifications preview */}
+      {data && (
+        <section className="mt-6" aria-label="Notifications">
+          <div className="mb-2.5 flex items-center justify-between">
+            <h2 className="text-[15px] font-bold tracking-tight text-ink">Notifications</h2>
+            <Link href="/app/trainer/notifications" className="flex items-center gap-0.5 text-[12.5px] font-semibold text-brand">
+              View all <ChevronRight size={14} />
+            </Link>
+          </div>
+          {data.latestNotifications.length === 0 ? (
+            <div className="card flex items-center gap-3 p-4 text-ink-2">
+              <FlaskConical size={17} className="text-ink-3" />
+              <p className="text-[13.5px]">Nothing here yet — updates from your gym will appear here.</p>
+            </div>
+          ) : (
+            <div className="card divide-y divide-line overflow-hidden">
+              {data.latestNotifications.map((n) => (
+                <Link key={n.id} href="/app/trainer/notifications" className="flex items-start gap-3 p-4 transition hover:bg-surface-2">
+                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.readAt ? "bg-ink-3/40" : "bg-brand"}`} aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13.5px] font-semibold text-ink">{n.title}</p>
+                    <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-ink-2">{n.body}</p>
+                  </div>
+                  <span className="shrink-0 text-[11px] text-ink-3">{timeAgo(n.createdAt)}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       {data && data.clientCount === 0 && !isLoading && (

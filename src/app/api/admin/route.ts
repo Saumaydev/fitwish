@@ -22,8 +22,11 @@ import {
   listMembers,
   listPaymentsAdmin,
   listReportsAdmin,
+  listTrainerAttendance,
+  listTrainerAttendanceHistory,
   listTrainersAdmin,
   markPaymentReceived,
+  markTrainerAttendance,
   rejectMember,
   rejectTrainer,
   searchUsers,
@@ -56,6 +59,13 @@ export async function GET(req: NextRequest) {
         return await getMemberDetail(admin.id, sp.get("uid") ?? "");
       case "trainers":
         return { trainers: await listTrainersAdmin(admin.id) };
+      case "trainerAttendance": {
+        const today = new Date();
+        const fallback = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        return await listTrainerAttendance(sp.get("date") ?? fallback);
+      }
+      case "trainerAttendanceHistory":
+        return { records: await listTrainerAttendanceHistory(60) };
       case "approvedTrainers":
         return { trainers: await getApprovedTrainers() };
       case "holidays":
@@ -153,6 +163,15 @@ export async function POST(req: Request) {
         const status = String(body.status ?? "") as "pending" | "open" | "resolved";
         if (!["pending", "open", "resolved"].includes(status)) throw new ApiError(400, "Invalid status.");
         await updateReportStatus(admin.id, String(body.id ?? ""), status);
+        return { ok: true };
+      }
+      case "markTrainerAttendance": {
+        const status = body.status === "absent" ? "absent" : "present";
+        await markTrainerAttendance(admin.id, {
+          trainerUid: String(body.trainerUid ?? ""),
+          date: String(body.date ?? ""),
+          status,
+        });
         return { ok: true };
       }
       case "markPaymentReceived":

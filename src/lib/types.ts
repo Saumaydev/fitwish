@@ -265,6 +265,33 @@ export interface TrainerOverviewDTO {
   pendingTasks: number;
   schedule: { userUid: string; name: string; photoUrl: string | null; sessionTime: string | null; membershipPlan: string | null }[];
   pendingRequests: TrainerRequestDTO[];
+  unreadNotifications: number;
+  latestNotifications: NotificationDTO[];
+  todayHoliday: HolidayDTO | null;
+  upcomingHolidays: HolidayDTO[];
+}
+
+export interface TrainerAttendanceRowDTO {
+  trainerUid: string;
+  name: string;
+  photoUrl: string | null;
+  status: "present" | "absent" | null;
+}
+
+export interface TrainerAttendanceDayDTO {
+  date: string;
+  rows: TrainerAttendanceRowDTO[];
+  present: number;
+  absent: number;
+  unmarked: number;
+}
+
+export interface TrainerAttendanceHistoryDTO {
+  id: string;
+  trainerUid: string;
+  trainerName: string;
+  date: string;
+  status: "present" | "absent";
 }
 
 export interface ClientDTO {

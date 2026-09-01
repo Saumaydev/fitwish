@@ -34,6 +34,7 @@ const ACTION_LABELS: Record<string, string> = {
   update_membership: "Updated membership",
   payment_received: "Recorded payment",
   report_resolved: "Resolved report",
+  mark_trainer_attendance: "Marked trainer attendance",
   create_holiday: "Added holiday",
   delete_holiday: "Removed holiday",
   send_notification: "Sent announcement",

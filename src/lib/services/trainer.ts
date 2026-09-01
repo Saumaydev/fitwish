@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   attendance,
   dietPlans,
+  gymHolidays,
   memberships,
   notifications,
   progress,
@@ -17,12 +18,13 @@ import {
 import { ApiError } from "@/lib/auth";
 import { APPROVAL, NOTIF_TYPES } from "@/lib/constants";
 import { attendancePercent, membershipState } from "@/lib/format";
-import { createNotification } from "./notifications";
+import { createNotification, listNotifications, unreadCount } from "./notifications";
 import type {
   AttendanceRecordDTO,
   AttendanceSummary,
   ClientBundle,
   ClientDTO,
+  HolidayDTO,
   TrainerOverviewDTO,
   TrainerRequestDTO,
 } from "@/lib/types";
@@ -237,6 +239,20 @@ export async function getTrainerOverview(trainerUid: string): Promise<TrainerOve
   const withSessions = clients.filter((c) => c.sessionTime);
   const activeClients = clients.filter((c) => c.membershipStatus === "active" || c.membershipStatus === "expiring");
 
+  /* Holiday reminders — same source the member panel uses. */
+  const holidayRows = await db
+    .select()
+    .from(gymHolidays)
+    .where(sql`${gymHolidays.date} >= ${todayStr}`)
+    .orderBy(sql`${gymHolidays.date} asc`)
+    .limit(6);
+  const upcoming: HolidayDTO[] = holidayRows.map((h) => ({ id: h.id, name: h.name, reason: h.reason, date: h.date }));
+  const todayHoliday = upcoming.find((h) => h.date === todayStr) ?? null;
+
+  /* Notifications for the trainer */
+  const latestNotifications = await listNotifications(trainerUid, 5);
+  const unread = await unreadCount(trainerUid);
+
   return {
     clientCount: clients.length,
     todaySessionCount: withSessions.length,
@@ -260,6 +276,10 @@ export async function getTrainerOverview(trainerUid: string): Promise<TrainerOve
       userPhoto: r.photoUrl,
       createdAt: r.createdAt.toISOString(),
     })),
+    unreadNotifications: unread,
+    latestNotifications,
+    todayHoliday,
+    upcomingHolidays: upcoming,
   };
 }
 

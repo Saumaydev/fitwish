@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
+  CalendarCheck2,
   CalendarDays,
   Dumbbell,
   Inbox,
@@ -30,6 +31,7 @@ const NAV = [
   { href: "/app/admin/members", label: "Members", icon: Users },
   { href: "/app/admin/trainers", label: "Trainers", icon: Dumbbell },
   { href: "/app/admin/requests", label: "Requests", icon: Inbox },
+  { href: "/app/admin/trainer-attendance", label: "Trainer Attendance", icon: CalendarCheck2 },
   { href: "/app/admin/holidays", label: "Holidays", icon: CalendarDays },
   { href: "/app/admin/reports", label: "Reports", icon: ShieldCheck },
   { href: "/app/admin/notifications", label: "Notifications", icon: BarChart3 },

@@ -19,6 +19,7 @@ const ACTION_LABELS: Record<string, string> = {
   report_open: "Opened report",
   report_resolved: "Resolved report",
   report_pending: "Set report pending",
+  mark_trainer_attendance: "Marked trainer attendance",
   create_holiday: "Added holiday",
   update_holiday: "Updated holiday",
   delete_holiday: "Removed holiday",

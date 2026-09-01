@@ -14,6 +14,7 @@ import {
   progress,
   progressPhotos,
   reports,
+  trainerAttendance,
   trainerRequests,
   trainers,
   users,
@@ -35,6 +36,8 @@ import type {
   Paginated,
   PaymentDTO,
   ReportDTO,
+  TrainerAttendanceDayDTO,
+  TrainerAttendanceHistoryDTO,
 } from "@/lib/types";
 
 /* ------------------------------------------------------------------ */
@@ -541,6 +544,102 @@ export async function assignTrainer(adminUid: string, memberUid: string, trainer
 }
 
 /* ------------------------------------------------------------------ */
+/* Trainer attendance — marked by the ADMIN                            */
+/* ------------------------------------------------------------------ */
+
+export async function listTrainerAttendance(date: string): Promise<TrainerAttendanceDayDTO> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new ApiError(400, "Invalid date.");
+
+  const trainerRows = await db
+    .select({
+      uid: trainers.uid,
+      name: trainers.name,
+      photoUrl: trainers.photoUrl,
+      approvalStatus: trainers.approvalStatus,
+      isActive: trainers.isActive,
+    })
+    .from(trainers)
+    .orderBy(sql`${trainers.name} asc`);
+
+  const marks = await db.select().from(trainerAttendance).where(eq(trainerAttendance.date, date));
+  const byTrainer = new Map(marks.map((m) => [m.trainerUid, m.status as "present" | "absent"]));
+
+  const rows = trainerRows
+    .filter((t) => t.approvalStatus === APPROVAL.APPROVED)
+    .map((t) => ({
+      trainerUid: t.uid,
+      name: t.name,
+      photoUrl: t.photoUrl,
+      status: byTrainer.get(t.uid) ?? null,
+    }));
+
+  const present = rows.filter((r) => r.status === "present").length;
+  const absent = rows.filter((r) => r.status === "absent").length;
+
+  return { date, rows, present, absent, unmarked: rows.length - present - absent };
+}
+
+export async function markTrainerAttendance(
+  adminUid: string,
+  data: { trainerUid: string; date: string; status: "present" | "absent" }
+): Promise<void> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date)) throw new ApiError(400, "Invalid date.");
+  const [trainer] = await db.select().from(trainers).where(eq(trainers.uid, data.trainerUid)).limit(1);
+  if (!trainer) throw new ApiError(404, "Trainer not found.");
+
+  const id = `${data.trainerUid}_${data.date}`;
+  const [existing] = await db.select().from(trainerAttendance).where(eq(trainerAttendance.id, id)).limit(1);
+  if (existing) {
+    if (existing.status === data.status) return; // idempotent
+    await db
+      .update(trainerAttendance)
+      .set({ status: data.status, markedByUid: adminUid, updatedAt: new Date() })
+      .where(eq(trainerAttendance.id, id));
+  } else {
+    await db.insert(trainerAttendance).values({
+      id,
+      trainerUid: data.trainerUid,
+      markedByUid: adminUid,
+      date: data.date,
+      status: data.status,
+    });
+  }
+
+  await audit(adminUid, "mark_trainer_attendance", "trainer", data.trainerUid, {
+    date: data.date,
+    status: data.status,
+  });
+  await createNotification(data.trainerUid, {
+    type: "trainer_attendance",
+    title: "Attendance marked",
+    body: `The gym admin marked you ${data.status} for ${data.date}.`,
+    actionRef: "/app/trainer/home",
+  });
+}
+
+export async function listTrainerAttendanceHistory(limit = 60): Promise<TrainerAttendanceHistoryDTO[]> {
+  const rows = await db
+    .select({
+      id: trainerAttendance.id,
+      trainerUid: trainerAttendance.trainerUid,
+      date: trainerAttendance.date,
+      status: trainerAttendance.status,
+      name: trainers.name,
+    })
+    .from(trainerAttendance)
+    .innerJoin(trainers, eq(trainerAttendance.trainerUid, trainers.uid))
+    .orderBy(sql`${trainerAttendance.date} desc, ${trainerAttendance.updatedAt} desc`)
+    .limit(limit);
+  return rows.map((r) => ({
+    id: r.id,
+    trainerUid: r.trainerUid,
+    trainerName: r.name,
+    date: r.date,
+    status: r.status as "present" | "absent",
+  }));
+}
+
+/* ------------------------------------------------------------------ */
 /* Holidays                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -842,6 +941,7 @@ export async function deleteTrainerPermanently(adminUid: string, trainerUid: str
   await db.update(workoutSessions).set({ trainerUid: null }).where(eq(workoutSessions.trainerUid, trainerUid));
   await db.update(attendance).set({ trainerUid: null, updatedAt: new Date() }).where(eq(attendance.trainerUid, trainerUid));
   await db.delete(trainerRequests).where(eq(trainerRequests.trainerUid, trainerUid));
+  await db.delete(trainerAttendance).where(eq(trainerAttendance.trainerUid, trainerUid));
   await purgeUserData(trainerUid);
   await db.delete(trainers).where(eq(trainers.uid, trainerUid));
   await db.delete(users).where(eq(users.id, trainerUid));

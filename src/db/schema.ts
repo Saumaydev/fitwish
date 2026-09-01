@@ -163,6 +163,28 @@ export const attendance = pgTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* trainerAttendance/{trainerUid_YYYY-MM-DD} — marked by the ADMIN     */
+/* ------------------------------------------------------------------ */
+export const trainerAttendance = pgTable(
+  "trainerAttendance",
+  {
+    id: text("id").primaryKey(),
+    trainerUid: text("trainer_uid").notNull(),
+    markedByUid: text("marked_by_uid"),
+    date: text("date").notNull(),
+    status: text("status").notNull(), // present | absent
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("trainer_attendance_trainer_date_uq").on(t.trainerUid, t.date),
+    index("trainer_attendance_date_idx").on(t.date),
+  ]
+);
+
+
+
+/* ------------------------------------------------------------------ */
 /* trainerRequests/{requestId}                                         */
 /* ------------------------------------------------------------------ */
 export const trainerRequests = pgTable(
