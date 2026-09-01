@@ -123,7 +123,7 @@ export function LoginScreen() {
     <img
       src="/images/brand-hero.jpg"
       alt=""
-      className="absolute inset-0 h-full w-full object-cover opacity-40"
+      className="absolute inset-0 h-full w-full object-cover opacity-100"
       aria-hidden
     />
 
