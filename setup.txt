@@ -1,0 +1,222 @@
+=====================================================================
+ FITWISH — SETUP GUIDE (step by step, with Supabase)
+=====================================================================
+
+FitWish is a premium gym management app (Members + Trainers + Admin).
+It runs as a web app and can be wrapped into an Android APK later.
+
+It uses:
+  • Supabase Postgres   → the database
+  • Supabase Auth       → email + password accounts
+  • Supabase Storage    → profile / progress photos (private bucket)
+  • Its own secure session cookie + server-side role checks
+
+There are NO demo/test accounts. You create the first admin yourself
+(Step 7), and members/trainers sign up and wait for admin approval.
+
+---------------------------------------------------------------------
+ WHAT YOU NEED
+---------------------------------------------------------------------
+ 1. Node.js 20 or newer          →  https://nodejs.org
+ 2. A free Supabase account      →  https://supabase.com
+ 3. A terminal / command prompt
+
+---------------------------------------------------------------------
+ STEP 1 — INSTALL EVERYTHING
+---------------------------------------------------------------------
+ Open a terminal inside the FitWish folder and run:
+
+     npm install
+
+---------------------------------------------------------------------
+ STEP 2 — CREATE THE SUPABASE PROJECT
+---------------------------------------------------------------------
+ 1. Go to https://supabase.com  →  sign in  →  "New project".
+ 2. Give it a name (e.g. fitwish), set a strong DATABASE PASSWORD
+    (write it down — you need it in Step 4) and pick a region close
+    to your users.
+ 3. Wait ~2 minutes until the project is ready.
+
+---------------------------------------------------------------------
+ STEP 3 — CREATE THE STORAGE BUCKET
+---------------------------------------------------------------------
+ In the Supabase dashboard:
+
+     Storage  →  New bucket
+        Name           :  fitwish-uploads
+        Public bucket  :  OFF   (keep it PRIVATE)
+        Create
+
+ Why private? All photos are served through the app's own
+ /api/files route, which checks who is asking before returning the
+ image. Nothing is publicly guessable.
+
+ (You may use another bucket name — just put the same name in
+  SUPABASE_STORAGE_BUCKET in Step 4.)
+
+---------------------------------------------------------------------
+ STEP 4 — CONFIGURE THE .env FILE
+---------------------------------------------------------------------
+ Copy the example file:
+
+     cp .env.example .env        (Linux / Mac)
+     copy .env.example .env      (Windows)
+
+ Now fill in 4 values from the Supabase dashboard:
+
+ A) DATABASE_URL
+    Project Settings → Database → Connection string → URI
+    Copy it and replace [YOUR-PASSWORD] with the database password
+    from Step 2. Example:
+      DATABASE_URL=postgresql://postgres:MyPass123@db.abcdxyz.supabase.co:5432/postgres
+
+    Tip: if your host does not allow direct connections, use the
+    "Connection pooling / Session" URI from the same page instead.
+
+ B) SUPABASE_URL
+    Project Settings → API → Project URL
+      SUPABASE_URL=https://abcdxyz.supabase.co
+
+ C) SUPABASE_SERVICE_ROLE_KEY
+    Project Settings → API → service_role secret key
+      SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi....
+    ⚠ This key is SECRET. It is used only on the server. Never put
+      it in client code, screenshots or a public repo.
+
+ D) SUPABASE_STORAGE_BUCKET
+      SUPABASE_STORAGE_BUCKET=fitwish-uploads
+
+---------------------------------------------------------------------
+ STEP 5 — EMAIL AUTH SETTINGS IN SUPABASE
+---------------------------------------------------------------------
+ Supabase dashboard → Authentication → Providers → Email:
+     • Enable "Email" provider                      → ON
+     • "Confirm email"                              → OFF
+       (The app approves accounts itself: every new member/trainer
+        waits for ADMIN approval, so a second email confirmation is
+        not needed. Turn it ON only if you also want email links.)
+
+ Authentication → URL Configuration:
+     • Site URL: http://localhost:3000 while developing,
+       and your real domain after deploying.
+
+---------------------------------------------------------------------
+ STEP 6 — CREATE THE TABLES
+---------------------------------------------------------------------
+     npx drizzle-kit push
+
+ This creates all FitWish tables inside your Supabase database.
+ (Check it in the dashboard: Table Editor → users, trainers, ...)
+
+---------------------------------------------------------------------
+ STEP 7 — CREATE YOUR ADMIN ACCOUNT  ⭐
+---------------------------------------------------------------------
+ There is no default admin. Create your own with one command:
+
+     npx tsx scripts/create-admin.ts "you@yourgym.com" "StrongPass@123" "Your Name"
+
+ or, using the npm script:
+
+     npm run create-admin -- "you@yourgym.com" "StrongPass@123" "Your Name"
+
+ What it does:
+   • creates the login in Supabase Auth (email already confirmed)
+   • creates the matching row in the users table with role = admin
+     and approval = approved
+
+ Rules:
+   • password must be at least 8 characters
+   • if that email already exists, the script simply upgrades that
+     account to ADMIN (safe to re-run)
+
+ To add another admin later, run the same command with a new email.
+ Then sign in at "/" with that email and password.
+
+---------------------------------------------------------------------
+ STEP 8 — RUN THE APP
+---------------------------------------------------------------------
+ Development:
+     npm run dev
+     → open http://localhost:3000
+
+ Production:
+     npm run build
+     npm run start
+     → open http://localhost:3000
+
+---------------------------------------------------------------------
+ STEP 9 — DEPLOY (production checklist)
+---------------------------------------------------------------------
+ 1. Push the project to GitHub (make sure .env is NOT committed).
+ 2. Create a project on your host (Vercel, Render, Railway, a VPS…).
+ 3. Add these environment variables in the host's dashboard:
+        DATABASE_URL
+        SUPABASE_URL
+        SUPABASE_SERVICE_ROLE_KEY
+        SUPABASE_STORAGE_BUCKET
+ 4. Build command: npm run build      Start command: npm run start
+ 5. After the first deploy:
+        • run `npx drizzle-kit push` once against the same database
+        • run the create-admin command once (locally, with the same
+          .env values) to create your admin
+ 6. Set Supabase → Authentication → URL Configuration → Site URL to
+    your live domain.
+ 7. Open the site, sign in as admin, and you are live.
+
+ Because photos live in Supabase Storage (not on disk), the app works
+ on serverless hosts and survives redeploys.
+
+---------------------------------------------------------------------
+ HOW THE FLOW WORKS
+---------------------------------------------------------------------
+ • The app opens on the LOGIN page.
+ • "Create account" → choose MEMBER or TRAINER.
+ • Member sign-up sends an approval request to the admin.
+   The member can only use the app AFTER the admin approves.
+ • Trainer sign-up also waits for admin approval.
+ • Log in as Admin → Requests tab → Approve/Reject.
+
+---------------------------------------------------------------------
+ ADMIN — FIRST STEPS
+---------------------------------------------------------------------
+ 1. Approve pending members & trainers (Requests page).
+ 2. Assign trainers to members (Members → member → Trainer tab).
+ 3. Set memberships & payments (Members → member → Membership tab).
+ 4. Add gym holidays (Holidays page).
+ 5. Handle reports & payment requests (Reports / Requests pages).
+
+---------------------------------------------------------------------
+ ANDROID APK (optional, later)
+---------------------------------------------------------------------
+ 1. Install Android Studio.
+ 2. Run:
+        npm run build
+        npx cap add android          (first time only)
+        npx cap sync android
+        npx cap open android
+ 3. In Android Studio: Build → Build Bundle(s) / APK(s).
+
+---------------------------------------------------------------------
+ COMMON QUESTIONS
+---------------------------------------------------------------------
+ Q: Where do uploads (photos) go?
+ A: Into the private Supabase Storage bucket, under
+    users/{uid}/profile/... and users/{uid}/progress/...
+    They are served only through /api/files after a permission check.
+    (If the Supabase variables are missing, the app falls back to the
+     local ./uploads folder so it still runs offline.)
+
+ Q: Where is security enforced?
+ A: On the server. Every API route checks the signed-in user's
+    role/approval. UI buttons are just shortcuts — the backend
+    is the real gate. The service-role key never leaves the server.
+
+ Q: Are there demo accounts?
+ A: No. They were removed. Create your admin with Step 7; everyone
+    else signs up from the app and is approved by the admin.
+
+ Q: I forgot the admin password?
+ A: Supabase dashboard → Authentication → Users → find the email →
+    "Reset password" / "Update user". Or create a second admin with
+    the create-admin command.
+=====================================================================
