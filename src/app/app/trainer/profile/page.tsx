@@ -23,7 +23,8 @@ export default function TrainerProfile() {
   const { theme, setTheme } = useTheme();
   const { data } = useSWR<{ clients: ClientDTO[] }>("/api/trainer?action=clients");
   const { data: overview } = useSWR<TrainerOverviewDTO>("/api/trainer?action=overview");
-
+  const { data: authData } = useSWR<{ user: NonNullable<typeof me> }>("/api/auth");
+  const profileUser = authData?.user ?? me;
   const [editOpen, setEditOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,15 +41,15 @@ export default function TrainerProfile() {
   const [reportBusy, setReportBusy] = useState(false);
 
   const openEdit = () => {
-    setName(me?.name ?? "");
-    setPhone(me?.phone ?? "");
-    setQualification(me?.trainer?.qualification ?? "");
-    setExperience(me?.trainer?.experience ?? "");
-    setBio(me?.trainer?.bio ?? "");
-    setAvailability(me?.trainer?.availability ?? "");
-    setPhotoUrl(me?.photoUrl ?? null);
-    setEditOpen(true);
-  };
+  setName(profileUser?.name ?? "");
+  setPhone(profileUser?.phone ?? "");
+  setQualification(profileUser?.trainer?.qualification ?? "");
+  setExperience(profileUser?.trainer?.experience ?? "");
+  setBio(profileUser?.trainer?.bio ?? "");
+  setAvailability(profileUser?.trainer?.availability ?? "");
+  setPhotoUrl(profileUser?.photoUrl ?? null);
+  setEditOpen(true);
+};
 
   const save = async () => {
     setBusy(true);
@@ -103,13 +104,13 @@ export default function TrainerProfile() {
       {/* Identity */}
       <div className="card p-5">
         <div className="flex items-center gap-4">
-          <Avatar name={me?.name ?? "?"} src={me?.photoUrl} size={64} />
+          <Avatar name={profileUser?.name ?? "?"} src={profileUser?.photoUrl} size={64} />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[19px] font-extrabold tracking-tight text-ink">{me?.name}</h1>
-            <p className="truncate text-[13px] text-ink-2">{me?.email}</p>
+            <h1 className="truncate text-[19px] font-extrabold tracking-tight text-ink">{profileUser?.name}</h1>
+            <p className="truncate text-[13px] text-ink-2">{profileUser?.email}</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <Badge tone="ok">Approved trainer</Badge>
-              {me?.phone && <Badge tone="neutral">{me.phone}</Badge>}
+              {profileUser?.phone && <Badge tone="neutral">{profileUser.phone}</Badge>}
             </div>
           </div>
         </div>
@@ -145,7 +146,7 @@ export default function TrainerProfile() {
           </span>
           <div className="min-w-0">
             <p className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-3">Qualification</p>
-            <p className="mt-0.5 text-[14px] font-bold text-ink">{me?.trainer?.qualification || "—"}</p>
+            <p className="mt-0.5 text-[14px] font-bold text-ink">{profileUser?.trainer?.qualification || "—"}</p>
           </div>
         </div>
         <div className="flex items-center gap-3.5 p-4">
@@ -154,7 +155,7 @@ export default function TrainerProfile() {
           </span>
           <div className="min-w-0">
             <p className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-3">Experience</p>
-            <p className="mt-0.5 text-[14px] font-bold text-ink">{me?.trainer?.experience || "—"}</p>
+            <p className="mt-0.5 text-[14px] font-bold text-ink">{profileUser?.trainer?.experience || "—"}</p>
           </div>
         </div>
         <div className="flex items-center gap-3.5 p-4">
@@ -163,13 +164,13 @@ export default function TrainerProfile() {
           </span>
           <div className="min-w-0">
             <p className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-3">Availability</p>
-            <p className="mt-0.5 text-[14px] font-bold text-ink">{me?.trainer?.availability || "—"}</p>
+            <p className="mt-0.5 text-[14px] font-bold text-ink">{profileUser?.trainer?.availability || "—"}</p>
           </div>
         </div>
-        {me?.trainer?.bio && (
+        {profileUser?.trainer?.bio && (
           <div className="p-4">
             <p className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-3">About me</p>
-            <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-2">{me.trainer.bio}</p>
+            <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-2">{profileUser.trainer.bio}</p>
           </div>
         )}
       </div>
