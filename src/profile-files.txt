@@ -1,0 +1,965 @@
+===== app\app\user\profile\page.tsx ===== 
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
+import {
+  Bell,
+  Calculator,
+  CalendarClock,
+  ChevronRight,
+  CircleHelp,
+  Dumbbell,
+  HeartPulse,
+  Salad,
+  IdCard,
+  LogOut,
+  Phone,
+  Settings,
+  UserSearch,
+} from "lucide-react";
+import { api } from "@/lib/client";
+import { useAuthStore } from "@/stores/app";
+import { fmtDate, fmtMoney, membershipState, MEMBERSHIP_STATE_LABEL } from "@/lib/format";
+import { Avatar, Badge, Button, Skeleton } from "@/components/ui/core";
+import { useToast } from "@/components/ui/toast";
+import type { UserBundle } from "@/lib/types";
+
+export default function UserProfile() {
+  const router = useRouter();
+  const toast = useToast();
+  const me = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const { data, isLoading } = useSWR<UserBundle>("/api/user");
+
+  const signOut = async () => {
+    await api("/api/auth", { method: "POST", body: { action: "logout" } }).catch(() => {});
+    setUser(null);
+    router.replace("/");
+    router.refresh();
+  };
+
+  const membership = data?.membership ?? null;
+  const state = membershipState(membership);
+
+  const rows = [
+    { href: "/app/user/settings", icon: Settings, label: "Settings", sub: "Account, theme & help" },
+    { href: "/app/user/diet", icon: Salad, label: "Diet Plan", sub: "Breakfast, lunch, snacks & dinner" },
+    { href: "/app/user/calculators", icon: Calculator, label: "Calculators", sub: "BMI, BMR, calories, water & protein" },
+    { href: "/app/user/trainers", icon: UserSearch, label: "Find a trainer", sub: me?.assignedTrainerUid ? "Change or view your trainer" : "Request a trainer" },
+    { href: "/app/user/notifications", icon: Bell, label: "Notifications", sub: data ? `${data.unreadNotifications} unread` : "View updates" },
+  ];
+
+  return (
+    <div>
+      {/* Identity */}
+      <div className="card relative overflow-hidden p-5">
+        <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-brand-soft blur-2xl" aria-hidden />
+        <div className="relative flex items-center gap-4">
+          <Avatar name={me?.name ?? "?"} src={me?.photoUrl} size={64} />
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-[20px] font-extrabold tracking-tight text-ink">{me?.name ?? "Member"}</h1>
+            <p className="truncate text-[13px] text-ink-2">{me?.email}</p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              {me?.phone && <Badge tone="neutral">{me.phone}</Badge>}
+              {membership && <Badge tone={state === "expired" ? "err" : state === "expiring" ? "warn" : "ok"}>{membership.plan}</Badge>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Membership */}
+      {isLoading ? (
+        <Skeleton className="mt-4 h-28 w-full rounded-[22px]" />
+      ) : membership ? (
+        <div className="card mt-4 p-5">
+          <div className="flex items-center justify-between">
+            <p className="flex items-center gap-1.5 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+              <IdCard size={13} /> Membership
+            </p>
+            <Badge tone={state === "expired" ? "err" : state === "expiring" ? "warn" : "ok"}>{MEMBERSHIP_STATE_LABEL[state]}</Badge>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">Plan</p>
+              <p className="mt-0.5 text-[14px] font-bold text-ink">{membership.plan}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">Expires</p>
+              <p className="tabular mt-0.5 text-[14px] font-bold text-ink">{fmtDate(membership.expiryDate)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">Due</p>
+              <p className="tabular mt-0.5 text-[14px] font-bold text-ink">{membership.dueAmount > 0 ? fmtMoney(membership.dueAmount) : "—"}</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="card mt-4 p-4 text-center text-[13.5px] text-ink-2">No membership set up yet — the admin will configure it.</div>
+      )}
+
+      {/* Trainer + session */}
+      <div className="card mt-4 flex items-center gap-4 p-5">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
+          <Dumbbell size={19} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-3">Trainer</p>
+          <p className="mt-0.5 truncate text-[14.5px] font-bold text-ink">{data?.trainer?.name ?? "Not assigned"}</p>
+        </div>
+        {data?.sessionTime && (
+          <div className="shrink-0 rounded-2xl bg-surface-2 px-3 py-2 text-center">
+            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">Session</p>
+            <p className="tabular mt-0.5 flex items-center gap-1 text-[13.5px] font-bold text-brand">
+              <CalendarClock size={13} /> {data.sessionTime}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Emergency contact */}
+      {me?.emergencyContact?.name && (
+        <div className="card mt-4 flex items-center gap-3 p-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-ink-2">
+            <HeartPulse size={17} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-3">Emergency contact</p>
+            <p className="mt-0.5 text-[13.5px] font-bold text-ink">{me.emergencyContact.name}</p>
+          </div>
+          {me.emergencyContact.phone && (
+            <a href={`tel:${me.emergencyContact.phone}`} className="btn btn-secondary btn-sm">
+              <Phone size={13} /> Call
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Menu */}
+      <nav className="card mt-4 divide-y divide-line overflow-hidden" aria-label="Profile menu">
+        {rows.map((r) => (
+          <Link key={r.href} href={r.href} className="flex items-center gap-3.5 p-4 transition hover:bg-surface-2">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-ink-2">
+              <r.icon size={17} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-bold text-ink">{r.label}</span>
+              <span className="block truncate text-[12px] text-ink-2">{r.sub}</span>
+            </span>
+            <ChevronRight size={16} className="shrink-0 text-ink-3" />
+          </Link>
+        ))}
+      </nav>
+
+      {/* About */}
+      <Link href="/app/user/settings#about" className="card mt-4 flex items-center gap-3.5 p-4 transition hover:bg-surface-2">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-ink-2">
+          <CircleHelp size={17} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14px] font-bold text-ink">About FitWish</span>
+          <span className="block text-[12px] text-ink-2">Version 1.0 · Premium gym experience</span>
+        </span>
+      </Link>
+
+      <Button variant="outline" block className="mt-5 !border-err/25 !text-err" onClick={signOut}>
+        <LogOut size={16} /> Sign out
+      </Button>
+      {!me?.assignedTrainerUid && (
+        <p className="mt-3 text-center text-[12px] text-ink-3">
+          Tip: request a trainer from the menu to unlock guided training.
+        </p>
+      )}
+    </div>
+  );
+}
+===== lib\services\users.ts ===== 
+import { randomUUID } from "crypto";
+import { and, eq, sql } from "drizzle-orm";
+import { db } from "@/db";
+import { gymHolidays, memberships, notifications, payments, trainerRequests, trainers, users } from "@/db/schema";
+import { ApiError } from "@/lib/auth";
+import { APPROVAL, NOTIF_TYPES } from "@/lib/constants";
+import { createNotification } from "./notifications";
+import type {
+  EmergencyContact,
+  MeUser,
+  TrainerDTO,
+  TrainerRequestDTO,
+  UserBundle,
+} from "@/lib/types";
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+
+function toTrainerDTO(t: typeof trainers.$inferSelect): TrainerDTO {
+  return {
+    uid: t.uid,
+    name: t.name,
+    qualification: t.qualification,
+    experience: t.experience,
+    bio: t.bio,
+    photoUrl: t.photoUrl,
+    availability: t.availability,
+    approvalStatus: t.approvalStatus as TrainerDTO["approvalStatus"],
+    adminApproval: t.adminApproval as TrainerDTO["adminApproval"],
+    isActive: t.isActive,
+  };
+}
+
+export async function toMeUser(u: typeof users.$inferSelect): Promise<MeUser> {
+  let trainer: TrainerDTO | null = null;
+  if (u.role === "trainer" || u.role === "admin") {
+    const [t] = await db.select().from(trainers).where(eq(trainers.uid, u.id)).limit(1);
+    if (t) trainer = toTrainerDTO(t);
+  }
+  return {
+    id: u.id,
+    role: u.role as MeUser["role"],
+    name: u.name,
+    email: u.email,
+    phone: u.phone,
+    photoUrl: u.photoUrl,
+    heightCm: u.heightCm,
+    emergencyContact: u.emergencyContact ?? null,
+    theme: (u.theme as MeUser["theme"]) ?? "system",
+    language: u.language ?? "en",
+    approvalStatus: u.approvalStatus as MeUser["approvalStatus"],
+    assignedTrainerUid: u.assignedTrainerUid,
+    sessionTime: u.sessionTime,
+    trainer,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Profile bundle for the user Home screen                             */
+/* ------------------------------------------------------------------ */
+
+export async function getUserBundle(uid: string): Promise<UserBundle> {
+  const [u] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
+  if (!u) throw new ApiError(404, "Account not found.");
+
+  const [membership] = await db.select().from(memberships).where(eq(memberships.userUid, uid)).limit(1);
+  let trainer: TrainerDTO | null = null;
+  if (u.assignedTrainerUid) {
+    const [t] = await db.select().from(trainers).where(eq(trainers.uid, u.assignedTrainerUid)).limit(1);
+    if (t) trainer = toTrainerDTO(t);
+  }
+
+  const [unread] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(notifications)
+    .where(and(eq(notifications.recipientUid, uid), sql`${notifications.readAt} is null`));
+
+  const latest = await db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.recipientUid, uid))
+    .orderBy(sql`${notifications.createdAt} desc`)
+    .limit(4);
+
+  const [openPayment] = await db
+    .select({ id: payments.id })
+    .from(payments)
+    .where(and(eq(payments.userUid, uid), eq(payments.status, "requested")))
+    .limit(1);
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const [todayHolidayRow] = await db.select().from(gymHolidays).where(eq(gymHolidays.date, todayStr)).limit(1);
+
+  return {
+    user: await toMeUser(u),
+    membership: membership ?? null,
+    trainer,
+    sessionTime: u.sessionTime,
+    unreadNotifications: unread?.count ?? 0,
+    openPaymentRequest: Boolean(openPayment),
+    todayHoliday: todayHolidayRow
+      ? { id: todayHolidayRow.id, name: todayHolidayRow.name, reason: todayHolidayRow.reason, date: todayHolidayRow.date }
+      : null,
+    latestNotifications: latest.map((n) => ({
+      id: n.id,
+      type: n.type,
+      title: n.title,
+      body: n.body,
+      readAt: n.readAt ? n.readAt.toISOString() : null,
+      actionRef: n.actionRef,
+      createdAt: n.createdAt.toISOString(),
+    })),
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Profile + settings updates                                          */
+/* ------------------------------------------------------------------ */
+
+export async function updateProfile(
+  uid: string,
+  fields: { name?: string; phone?: string; photoUrl?: string | null; heightCm?: number | null; emergencyContact?: EmergencyContact }
+): Promise<void> {
+  const patch: Record<string, unknown> = { updatedAt: new Date() };
+  if (fields.name !== undefined) patch.name = fields.name.trim();
+  if (fields.phone !== undefined) patch.phone = fields.phone.trim();
+  if (fields.photoUrl !== undefined) patch.photoUrl = fields.photoUrl;
+  if (fields.heightCm !== undefined) patch.heightCm = fields.heightCm;
+  if (fields.emergencyContact !== undefined) patch.emergencyContact = fields.emergencyContact;
+  if (patch.name === "" ) throw new ApiError(400, "Name can't be empty.");
+  await db.update(users).set(patch).where(eq(users.id, uid));
+}
+
+export async function updateSettings(
+  uid: string,
+  fields: { theme?: string; notificationPrefs?: { workouts?: boolean; payments?: boolean; announcements?: boolean } }
+): Promise<void> {
+  const patch: Record<string, unknown> = { updatedAt: new Date() };
+  if (fields.theme) patch.theme = fields.theme;
+  if (fields.notificationPrefs) {
+    const [u] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
+    const prefs = { workouts: true, payments: true, announcements: true, ...(u?.notificationPrefs ?? {}), ...fields.notificationPrefs };
+    patch.notificationPrefs = prefs;
+  }
+  await db.update(users).set(patch).where(eq(users.id, uid));
+}
+
+/* ------------------------------------------------------------------ */
+/* Trainer directory + requests                                        */
+/* ------------------------------------------------------------------ */
+
+export async function getApprovedTrainers(): Promise<TrainerDTO[]> {
+  const rows = await db
+    .select()
+    .from(trainers)
+    .where(
+      and(
+        eq(trainers.approvalStatus, APPROVAL.APPROVED),
+        eq(trainers.adminApproval, APPROVAL.APPROVED),
+        eq(trainers.isActive, true)
+      )
+    )
+    .orderBy(sql`${trainers.name} asc`);
+  return rows.map(toTrainerDTO);
+}
+
+export async function requestTrainer(userUid: string, trainerUid: string): Promise<void> {
+  const [trainer] = await db
+    .select()
+    .from(trainers)
+    .where(
+      and(
+        eq(trainers.uid, trainerUid),
+        eq(trainers.approvalStatus, APPROVAL.APPROVED),
+        eq(trainers.adminApproval, APPROVAL.APPROVED),
+        eq(trainers.isActive, true)
+      )
+    )
+    .limit(1);
+  if (!trainer) throw new ApiError(404, "That trainer is not available.");
+
+  const [existing] = await db
+    .select()
+    .from(trainerRequests)
+    .where(and(eq(trainerRequests.userUid, userUid), eq(trainerRequests.trainerUid, trainerUid)))
+    .limit(1);
+
+  if (existing && existing.status === "accepted") {
+    throw new ApiError(409, "You already train with this trainer.");
+  }
+  if (existing && existing.status === "pending") {
+    throw new ApiError(409, "Your request is already pending with this trainer.");
+  }
+
+  const [user] = await db.select().from(users).where(eq(users.id, userUid)).limit(1);
+  if (!user) throw new ApiError(404, "Account not found.");
+
+  if (existing && existing.status === "rejected") {
+    await db
+      .update(trainerRequests)
+      .set({ status: "pending", respondedAt: null, createdAt: new Date() })
+      .where(eq(trainerRequests.id, existing.id));
+  } else {
+    await db.insert(trainerRequests).values({
+      id: randomUUID(),
+      userUid,
+      trainerUid,
+      status: "pending",
+    });
+  }
+
+  await createNotification(trainerUid, {
+    type: NOTIF_TYPES.TRAINER_REQUEST,
+    title: "New client request",
+    body: `${user.name} wants to train with you.`,
+    actionRef: "/app/trainer/requests",
+  });
+}
+
+export async function getUserTrainerRequests(userUid: string): Promise<TrainerRequestDTO[]> {
+  const rows = await db
+    .select({
+      id: trainerRequests.id,
+      trainerUid: trainerRequests.trainerUid,
+      status: trainerRequests.status,
+      createdAt: trainerRequests.createdAt,
+      name: trainers.name,
+    })
+    .from(trainerRequests)
+    .innerJoin(trainers, eq(trainerRequests.trainerUid, trainers.uid))
+    .where(eq(trainerRequests.userUid, userUid))
+    .orderBy(sql`${trainerRequests.createdAt} desc`)
+    .limit(20);
+  return rows.map((r) => ({
+    id: r.id,
+    userUid,
+    trainerUid: r.trainerUid,
+    status: r.status as TrainerRequestDTO["status"],
+    userName: r.name,
+    userPhoto: null,
+    createdAt: r.createdAt.toISOString(),
+  }));
+}
+===== app\api\user\route.ts ===== 
+import { requireApiUser } from "@/lib/auth";
+import { handle, readJson } from "@/lib/api-helpers";
+import { getUserBundle, updateProfile, updateSettings } from "@/lib/services/users";
+import type { EmergencyContact } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+/* GET /api/user — Home bundle (membership, trainer, session, notifications) */
+export async function GET() {
+  return handle(async () => {
+    const user = await requireApiUser(["user"]);
+    return await getUserBundle(user.id);
+  });
+}
+
+/* PATCH /api/user — profile or settings */
+export async function PATCH(req: Request) {
+  return handle(async () => {
+    const user = await requireApiUser(["user", "trainer"]);
+    const body = await readJson<Record<string, unknown>>(req);
+    const action = String(body.action ?? "");
+
+    if (action === "profile") {
+      await updateProfile(user.id, {
+        name: body.name !== undefined ? String(body.name) : undefined,
+        phone: body.phone !== undefined ? String(body.phone) : undefined,
+        photoUrl: body.photoUrl !== undefined ? (body.photoUrl as string | null) : undefined,
+        heightCm: body.heightCm !== undefined ? (body.heightCm ? Number(body.heightCm) : null) : undefined,
+        emergencyContact: body.emergencyContact !== undefined ? (body.emergencyContact as EmergencyContact) : undefined,
+      });
+      return { ok: true };
+    }
+
+    if (action === "settings") {
+      await updateSettings(user.id, {
+        theme: body.theme !== undefined ? String(body.theme) : undefined,
+        notificationPrefs: body.notificationPrefs as never,
+      });
+      return { ok: true };
+    }
+
+    return { ok: false, error: "Unknown action." };
+  });
+}
+===== components\PhotoPicker.tsx ===== 
+"use client";
+
+import { useRef, useState } from "react";
+import { Camera, ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { api } from "@/lib/client";
+
+async function compressImage(file: File, maxDim: number, quality: number): Promise<Blob> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = url;
+    });
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas unavailable");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+    if (!blob) throw new Error("Compression failed");
+    return blob;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+export interface UploadResult {
+  url: string;
+  thumbnailUrl: string | null;
+  storagePath: string;
+}
+
+export function PhotoPicker({
+  value,
+  onUploaded,
+  scope,
+  label = "Add photo",
+  onClear,
+}: {
+  value: string | null;
+  onUploaded: (res: UploadResult) => void;
+  scope: "profile" | "progress";
+  label?: string;
+  onClear?: () => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const upload = async (file: File | undefined | null) => {
+    if (!file || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const main = await compressImage(file, 1400, 0.78);
+      const thumb = await compressImage(file, 360, 0.72);
+      const fd = new FormData();
+      fd.append("scope", scope);
+      fd.append("file", main, "photo.jpg");
+      fd.append("thumb", thumb, "thumb.jpg");
+      const res = await api<UploadResult>("/api/upload", { formData: fd });
+      onUploaded(res);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed. Try again.");
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+      if (cameraRef.current) cameraRef.current.value = "";
+    }
+  };
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-3">
+        <img src={value} alt="Selected" className="h-16 w-16 rounded-2xl border border-line object-cover" />
+        <div className="flex gap-2">
+          <button type="button" onClick={() => cameraRef.current?.click()} className="btn btn-secondary btn-sm">
+            <Camera size={14} /> Change
+          </button>
+          {onClear && (
+            <button type="button" onClick={onClear} aria-label="Remove photo" className="btn btn-ghost btn-sm btn-icon text-err">
+              <Trash2 size={15} />
+            </button>
+          )}
+        </div>
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex gap-2">
+        <button type="button" onClick={() => cameraRef.current?.click()} disabled={busy} className="btn btn-secondary btn-sm">
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />} {busy ? "Uploading…" : label}
+        </button>
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={busy}
+          aria-label="Choose from gallery"
+          className="btn btn-secondary btn-sm btn-icon"
+        >
+          <ImagePlus size={15} />
+        </button>
+      </div>
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+      {error && <p className="field-error">{error}</p>}
+    </div>
+  );
+}
+===== lib\types.ts ===== 
+/* ------------------------------------------------------------------ */
+/* FitWish shared types — data-transfer objects (API boundary)         */
+/* ------------------------------------------------------------------ */
+
+export type Role = "user" | "trainer" | "admin";
+export type ApprovalStatus = "pending" | "approved" | "rejected";
+export type ThemePref = "system" | "light" | "dark";
+
+export interface EmergencyContact {
+  name?: string;
+  phone?: string;
+  relation?: string;
+}
+
+export interface Measurements {
+  chest?: number | null;
+  waist?: number | null;
+  arms?: number | null;
+  thighs?: number | null;
+  hips?: number | null;
+}
+
+export interface WorkoutExercise {
+  exerciseId: string;
+  name: string;
+  sets: number;
+  reps: string | number;
+  weight: string | number | null;
+  rest: number; // seconds
+  instructions: string;
+  order: number;
+}
+
+export interface ExerciseResult {
+  exerciseId: string;
+  name: string;
+  completedSets: number;
+  actualReps: string | number;
+  actualWeight: number | null;
+  completed: boolean;
+}
+
+export interface DietItem {
+  itemId: string;
+  name: string;
+  quantity: string;
+  calories: number | null;
+  protein: number | null;
+}
+
+export interface DietMeal {
+  mealId: string;
+  type: string; // breakfast | lunch | snacks | dinner
+  time: string;
+  items: DietItem[];
+  notes: string;
+  order: number;
+}
+
+export interface TrainerDTO {
+  uid: string;
+  name: string;
+  qualification: string | null;
+  experience: string | null;
+  bio: string | null;
+  photoUrl: string | null;
+  availability: string | null;
+  approvalStatus: ApprovalStatus;
+  adminApproval: ApprovalStatus;
+  isActive: boolean;
+}
+
+export interface MeUser {
+  id: string;
+  role: Role;
+  name: string;
+  email: string;
+  phone: string | null;
+  photoUrl: string | null;
+  heightCm: number | null;
+  emergencyContact: EmergencyContact | null;
+  theme: ThemePref;
+  language: string;
+  approvalStatus: ApprovalStatus;
+  assignedTrainerUid: string | null;
+  sessionTime: string | null;
+  trainer: TrainerDTO | null;
+}
+
+export interface MembershipDTO {
+  id: string;
+  userUid: string;
+  plan: string;
+  startDate: string;
+  durationMonths: number;
+  expiryDate: string;
+  totalAmount: number;
+  paidAmount: number;
+  dueAmount: number;
+  paymentStatus: string;
+}
+
+export interface WorkoutPlanDTO {
+  id: string;
+  userUid: string;
+  trainerUid: string | null;
+  title: string;
+  exercises: WorkoutExercise[];
+  status: string;
+  updatedAt: string;
+}
+
+export interface DietPlanDTO {
+  id: string;
+  userUid: string;
+  trainerUid: string | null;
+  title: string;
+  notes: string | null;
+  meals: DietMeal[];
+  status: string;
+  updatedAt: string;
+}
+
+export interface UserDietBundle {
+  dietPlan: DietPlanDTO | null;
+}
+
+export interface WorkoutSessionDTO {
+  id: string;
+  planId: string | null;
+  startedAt: string;
+  completedAt: string;
+  exerciseResults: ExerciseResult[];
+}
+
+export interface AttendanceRecordDTO {
+  id: string;
+  date: string;
+  status: "present" | "absent";
+  trainerName?: string | null;
+}
+
+export interface AttendanceSummary {
+  total: number;
+  present: number;
+  absent: number;
+  percent: number;
+}
+
+export interface TrainerRequestDTO {
+  id: string;
+  userUid: string;
+  trainerUid: string;
+  status: "pending" | "accepted" | "rejected";
+  userName: string;
+  userPhoto: string | null;
+  createdAt: string;
+}
+
+export interface NotificationDTO {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  readAt: string | null;
+  actionRef: string | null;
+  createdAt: string;
+}
+
+export interface HolidayDTO {
+  id: string;
+  name: string;
+  reason: string | null;
+  date: string;
+}
+
+export interface ProgressEntryDTO {
+  id: string;
+  date: string;
+  weight: number | null;
+  bmi: number | null;
+  measurements: Measurements | null;
+}
+
+export interface ProgressPhotoDTO {
+  id: string;
+  url: string;
+  thumbnailUrl: string | null;
+  date: string;
+  category: string;
+  storagePath: string;
+}
+
+export interface CalcDTO {
+  id: string;
+  type: string;
+  inputs: Record<string, number | string>;
+  result: string;
+  createdAt: string;
+}
+
+export interface ReportDTO {
+  id: string;
+  userUid: string;
+  userName: string;
+  userEmail: string;
+  type: string;
+  description: string;
+  status: "pending" | "open" | "resolved";
+  createdAt: string;
+}
+
+export interface PaymentDTO {
+  id: string;
+  userUid: string;
+  userName: string;
+  amount: number;
+  status: "requested" | "received";
+  createdAt: string;
+}
+
+export interface AuditDTO {
+  id: string;
+  adminUid: string;
+  adminName: string | null;
+  action: string;
+  targetType: string;
+  targetId: string | null;
+  createdAt: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Bundles                                                            */
+/* ------------------------------------------------------------------ */
+
+export interface UserBundle {
+  user: MeUser;
+  membership: MembershipDTO | null;
+  trainer: TrainerDTO | null;
+  sessionTime: string | null;
+  unreadNotifications: number;
+  openPaymentRequest: boolean;
+  latestNotifications: NotificationDTO[];
+  todayHoliday: HolidayDTO | null;
+}
+
+export interface UserWorkoutBundle {
+  plan: WorkoutPlanDTO | null;
+  sessions: WorkoutSessionDTO[];
+}
+
+export interface UserProgressBundle {
+  entries: ProgressEntryDTO[];
+  photos: ProgressPhotoDTO[];
+  workoutCount: number;
+  attendance: AttendanceSummary;
+  latestWeight: number | null;
+  latestBmi: number | null;
+}
+
+export interface TrainerOverviewDTO {
+  clientCount: number;
+  todaySessionCount: number;
+  activeClientCount: number;
+  pendingTasks: number;
+  schedule: { userUid: string; name: string; photoUrl: string | null; sessionTime: string | null; membershipPlan: string | null }[];
+  pendingRequests: TrainerRequestDTO[];
+  unreadNotifications: number;
+  latestNotifications: NotificationDTO[];
+  todayHoliday: HolidayDTO | null;
+  upcomingHolidays: HolidayDTO[];
+}
+
+export interface TrainerAttendanceRowDTO {
+  trainerUid: string;
+  name: string;
+  photoUrl: string | null;
+  status: "present" | "absent" | null;
+}
+
+export interface TrainerAttendanceDayDTO {
+  date: string;
+  rows: TrainerAttendanceRowDTO[];
+  present: number;
+  absent: number;
+  unmarked: number;
+}
+
+export interface TrainerAttendanceHistoryDTO {
+  id: string;
+  trainerUid: string;
+  trainerName: string;
+  date: string;
+  status: "present" | "absent";
+}
+
+export interface ClientDTO {
+  uid: string;
+  name: string;
+  photoUrl: string | null;
+  plan: string | null;
+  sessionTime: string | null;
+  membershipStatus: string;
+  latestWeight: number | null;
+  workoutCount: number;
+  attendancePercent: number;
+}
+
+export interface ClientBundle {
+  user: MeUser;
+  membership: MembershipDTO | null;
+  plan: WorkoutPlanDTO | null;
+  dietPlan: DietPlanDTO | null;
+  sessionTime: string | null;
+  attendance: AttendanceSummary;
+  recentAttendance: AttendanceRecordDTO[];
+  entries: ProgressEntryDTO[];
+  photos: ProgressPhotoDTO[];
+  workoutCount: number;
+}
+
+export interface AdminDashboardDTO {
+  totalUsers: number;
+  pendingMemberApprovals: number;
+  totalTrainers: number;
+  activeTrainers: number;
+  inactiveTrainers: number;
+  pendingTrainerApprovals: number;
+  activeMemberships: number;
+  expiringMemberships: number;
+  expiredMemberships: number;
+  totalDue: number;
+  pendingReports: number;
+  pendingPayments: number;
+  attendanceToday: number;
+  signups: { date: string; count: number }[];
+  recentAudit: AuditDTO[];
+}
+
+export interface MemberRowDTO {
+  uid: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  photoUrl: string | null;
+  approvalStatus: ApprovalStatus;
+  plan: string | null;
+  membershipStatus: string | null;
+  dueAmount: number | null;
+  trainerName: string | null;
+  sessionTime: string | null;
+  createdAt: string;
+}
+
+export interface AdminMemberDTO {
+  user: MeUser;
+  membership: MembershipDTO | null;
+  trainer: TrainerDTO | null;
+  assignedTrainer: TrainerDTO | null;
+  attendance: AttendanceSummary;
+  entries: ProgressEntryDTO[];
+  workoutCount: number;
+}
+
+export interface AdminTrainerDTO {
+  trainer: TrainerDTO;
+  email: string | null;
+  phone: string | null;
+  clientCount: number;
+  createdAt: string;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}

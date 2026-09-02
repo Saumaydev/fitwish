@@ -31,7 +31,7 @@ export default function UserProfile() {
   const me = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const { data, isLoading } = useSWR<UserBundle>("/api/user");
-
+  const profileUser = data?.user ?? me;
   const signOut = async () => {
     await api("/api/auth", { method: "POST", body: { action: "logout" } }).catch(() => {});
     setUser(null);
@@ -56,12 +56,25 @@ export default function UserProfile() {
       <div className="card relative overflow-hidden p-5">
         <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-brand-soft blur-2xl" aria-hidden />
         <div className="relative flex items-center gap-4">
-          <Avatar name={me?.name ?? "?"} src={me?.photoUrl} size={64} />
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[20px] font-extrabold tracking-tight text-ink">{me?.name ?? "Member"}</h1>
-            <p className="truncate text-[13px] text-ink-2">{me?.email}</p>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              {me?.phone && <Badge tone="neutral">{me.phone}</Badge>}
+          <Avatar
+  name={profileUser?.name ?? "?"}
+  src={profileUser?.photoUrl}
+  size={64}
+/>
+
+<div className="min-w-0 flex-1">
+  <h1 className="truncate text-[20px] font-extrabold tracking-tight text-ink">
+    {profileUser?.name ?? "Member"}
+  </h1>
+
+  <p className="truncate text-[13px] text-ink-2">
+    {profileUser?.email}
+  </p>
+
+  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+    {profileUser?.phone && (
+      <Badge tone="neutral">{profileUser.phone}</Badge>
+    )}
               {membership && <Badge tone={state === "expired" ? "err" : state === "expiring" ? "warn" : "ok"}>{membership.plan}</Badge>}
             </div>
           </div>
@@ -165,7 +178,7 @@ export default function UserProfile() {
       <Button variant="outline" block className="mt-5 !border-err/25 !text-err" onClick={signOut}>
         <LogOut size={16} /> Sign out
       </Button>
-      {!me?.assignedTrainerUid && (
+      {!profileUser?.assignedTrainerUid && (
         <p className="mt-3 text-center text-[12px] text-ink-3">
           Tip: request a trainer from the menu to unlock guided training.
         </p>
