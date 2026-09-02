@@ -316,7 +316,7 @@ export default function ClientDetail() {
 
       <div className="mt-5 w-full min-w-0 overflow-x-auto">
   <Segmented
-    className="w-full min-w-0 [&>button]:flex-1"
+    className="min-w-[620px] [&>button]:min-w-[120px] [&>button]:flex-none"
     options={[
       { value: "overview", label: "Overview" },
       { value: "plan", label: "Workout Plan" },
