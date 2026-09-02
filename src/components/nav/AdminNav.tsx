@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   Sun,
   ShieldCheck,
+  Settings,
   Users,
   UserCheck,
 } from "lucide-react";
@@ -36,6 +37,7 @@ const NAV = [
   { href: "/app/admin/reports", label: "Reports", icon: ShieldCheck },
   { href: "/app/admin/notifications", label: "Notifications", icon: BarChart3 },
   { href: "/app/admin/audit", label: "Activity", icon: UserCheck },
+  { href: "/app/admin/settings", label: "Settings", icon: Settings },
 ];
 
 const MOBILE_MAIN = NAV.slice(0, 4);
