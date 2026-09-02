@@ -314,19 +314,20 @@ export default function ClientDetail() {
         )}
       </div>
 
-      <Segmented
-        className="mt-5 w-full [&>button]:flex-1"
-        options={[
-          { value: "overview", label: "Overview" },
-          { value: "plan", label: "Workout Plan" },
-          { value: "diet", label: "Diet Plan" },
-          { value: "progress", label: "Progress" },
-          { value: "attendance", label: "Attendance" },
-        ]}
-        value={tab}
-        onChange={setTab}
-      />
-
+      <div className="mt-5 w-full min-w-0 overflow-x-auto">
+  <Segmented
+    className="w-full min-w-0 [&>button]:flex-1"
+    options={[
+      { value: "overview", label: "Overview" },
+      { value: "plan", label: "Workout Plan" },
+      { value: "diet", label: "Diet Plan" },
+      { value: "progress", label: "Progress" },
+      { value: "attendance", label: "Attendance" },
+    ]}
+    value={tab}
+    onChange={setTab}
+  />
+</div>
       <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="mt-4 space-y-4">
         {/* ---------------- Overview ---------------- */}
         {tab === "overview" && (
