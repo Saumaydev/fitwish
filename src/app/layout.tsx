@@ -6,7 +6,7 @@ import { APP_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: {
-    default: `${APP_NAME} — Premium Gym & Member Experience`,
+    default: `${APP_NAME} `,
     template: `%s · ${APP_NAME}`,
   },
   description:

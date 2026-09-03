@@ -420,7 +420,13 @@ export function WorkoutPlayer({ onExit }: { onExit: () => void }) {
             <Button
               block
               size="lg"
-              onClick={completeSet}
+              onClick={() => {
+  if (exerciseDone && isLast) {
+    setFinishOpen(true);
+  } else {
+    completeSet();
+  }
+}}
               className="text-[15.5px]"
               aria-label={exerciseDone ? (isLast ? "Finish workout" : "Continue") : `Complete set ${(s.setCounts[s.current] ?? 0) + 1} of ${ex.sets}`}
             >
