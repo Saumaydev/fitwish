@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/* FitWish centralized constants — roles, states, plans                */
+/* Fitwish centralized constants — roles, states, plans                */
 /* ------------------------------------------------------------------ */
 
 export const ROLES = {
@@ -55,7 +55,7 @@ export const SESSION_TTL_DAYS = 30;
 export const WORKOUT_STORAGE_KEY = "fitwish:active-workout:v1";
 export const THEME_STORAGE_KEY = "fitwish:theme";
 
-export const APP_NAME = "FitWish";
+export const APP_NAME = "Fitwish";
 export const APP_VERSION = "1.0.0";
 
 export const NOTIF_TYPES = {

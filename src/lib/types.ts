@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/* FitWish shared types — data-transfer objects (API boundary)         */
+/* Fitwish shared types — data-transfer objects (API boundary)         */
 /* ------------------------------------------------------------------ */
 
 export type Role = "user" | "trainer" | "admin";

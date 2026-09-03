@@ -111,7 +111,7 @@ export function LoginScreen() {
           </div>
         </motion.div>
 
-        <p className="relative z-10 text-[12px] text-white/40">© {new Date().getFullYear()} FitWish · Premium gym experience</p>
+        <p className="relative z-10 text-[12px] text-white/40">© {new Date().getFullYear()} Fitwish · Premium gym experience</p>
       </section>
 
       {/* Form panel */}
@@ -198,7 +198,7 @@ export function LoginScreen() {
           </form>
 
           <p className="mt-6 text-center text-[13.5px] text-ink-2">
-            New to FitWish?{" "}
+            New to Fitwish?{" "}
             <Link href="/register" className="font-semibold text-brand transition hover:text-brand-strong">
               Create account
             </Link>

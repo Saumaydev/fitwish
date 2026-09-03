@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/* FitWish formatting + pure business logic (unit-testable)            */
+/* Fitwish formatting + pure business logic (unit-testable)            */
 /* ------------------------------------------------------------------ */
 
 import type { MembershipDTO } from "./types";

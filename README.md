@@ -1,10 +1,10 @@
-# FitWish — Premium Gym Management & Member Experience
+# Fitwish — Premium Gym Management & Member Experience
 
-FitWish is a production-quality gym platform with three roles — **Member**, **Trainer**, **Admin** — built as a fast, premium, mobile-first web application (Next.js 16, TypeScript strict, PostgreSQL via Drizzle ORM, Tailwind CSS v4, Framer Motion, SWR, Zustand, Recharts) that is Android-packaging ready through Capacitor.
+Fitwish is a production-quality gym platform with three roles — **Member**, **Trainer**, **Admin** — built as a fast, premium, mobile-first web application (Next.js 16, TypeScript strict, PostgreSQL via Drizzle ORM, Tailwind CSS v4, Framer Motion, SWR, Zustand, Recharts) that is Android-packaging ready through Capacitor.
 
 The backend architecture mirrors Firebase conventions (Auth / Firestore collections / UID-scoped Storage / security rules) so the data model and service layer map 1:1 to a Firebase port if ever needed:
 
-| Firebase concept | FitWish equivalent |
+| Firebase concept | Fitwish equivalent |
 | --- | --- |
 | Firebase Auth | Server-side session auth (`src/lib/auth.ts`), scrypt password hashing, httpOnly cookies |
 | Cloud Firestore collections | PostgreSQL tables in `src/db/schema.ts` (users, trainers, memberships, workoutPlans, workoutSessions, attendance, trainerRequests, progress, progressPhotos, calculations, notifications, reports, gymHolidays, payments, adminAuditLogs) |

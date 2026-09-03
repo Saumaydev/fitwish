@@ -2,7 +2,7 @@
  FITWISH — SETUP GUIDE (step by step, with Supabase)
 =====================================================================
 
-FitWish is a premium gym management app (Members + Trainers + Admin).
+Fitwish is a premium gym management app (Members + Trainers + Admin).
 It runs as a web app and can be wrapped into an Android APK later.
 
 It uses:
@@ -24,7 +24,7 @@ There are NO demo/test accounts. You create the first admin yourself
 ---------------------------------------------------------------------
  STEP 1 — INSTALL EVERYTHING
 ---------------------------------------------------------------------
- Open a terminal inside the FitWish folder and run:
+ Open a terminal inside the Fitwish folder and run:
 
      npm install
 
@@ -105,7 +105,7 @@ There are NO demo/test accounts. You create the first admin yourself
 ---------------------------------------------------------------------
      npx drizzle-kit push
 
- This creates all FitWish tables inside your Supabase database.
+ This creates all Fitwish tables inside your Supabase database.
  (Check it in the dashboard: Table Editor → users, trainers, ...)
 
 ---------------------------------------------------------------------

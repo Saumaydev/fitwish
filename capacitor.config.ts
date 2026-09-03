@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 /**
- * FitWish — Capacitor configuration for Android packaging.
+ * Fitwish — Capacitor configuration for Android packaging.
  *
  * The web build (Next.js) is served through Capacitor's WebView.
  * For a local APK, build the web app and point `webDir` at the build
@@ -13,7 +13,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  */
 const config: CapacitorConfig = {
   appId: "app.fitwish.gym",
-  appName: "FitWish",
+  appName: "Fitwish",
   webDir: "out",
   android: {
     allowMixedContent: true,
@@ -21,7 +21,7 @@ const config: CapacitorConfig = {
   },
   server: {
     androidScheme: "https",
-    // Point this at your deployed FitWish URL during development:
+    // Point this at your deployed Fitwish URL during development:
     // url: "https://your-fitwish-deployment.example.com",
     cleartext: false,
   },

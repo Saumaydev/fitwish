@@ -259,7 +259,7 @@ export default function RegisterPage() {
 
         <div className="mt-8 flex items-center justify-center gap-1.5 text-[12px] text-ink-3">
           <Users size={13} />
-          Protected & approved by the FitWish admin team
+          Protected & approved by the Fitwish admin team
         </div>
       </div>
     </div>

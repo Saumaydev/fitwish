@@ -170,7 +170,7 @@ export default function UserProfile() {
           <CircleHelp size={17} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[14px] font-bold text-ink">About FitWish</span>
+          <span className="block text-[14px] font-bold text-ink">About Fitwish</span>
           <span className="block text-[12px] text-ink-2">Version 1.0 · Premium gym experience</span>
         </span>
       </Link>

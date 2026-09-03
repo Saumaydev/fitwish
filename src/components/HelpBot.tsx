@@ -1,7 +1,7 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/* FitWish Assistant — offline, rule-based help bot (no external LLM)  */
+/* Fitwish Assistant — offline, rule-based help bot (no external LLM)  */
 /* Answers questions about the app using the signed-in user's own data */
 /* ------------------------------------------------------------------ */
 
@@ -30,11 +30,11 @@ const ENDPOINT: Record<BotRole, string> = {
 
 const GREETING: Record<BotRole, string> = {
   user:
-    "Hi! I'm the FitWish assistant. I can tell you your session time, membership dues, plan expiry, trainer and attendance — just ask.",
+    "Hi! I'm the Fitwish assistant. I can tell you your session time, membership dues, plan expiry, trainer and attendance — just ask.",
   trainer:
-    "Hi! I'm the FitWish assistant. Ask me about today's sessions, your clients, pending requests or how attendance and plans work.",
+    "Hi! I'm the Fitwish assistant. Ask me about today's sessions, your clients, pending requests or how attendance and plans work.",
   admin:
-    "Hi! I'm the FitWish assistant. Ask me about members, pending approvals, dues, reports or payment requests.",
+    "Hi! I'm the Fitwish assistant. Ask me about members, pending approvals, dues, reports or payment requests.",
 };
 
 const SUGGESTIONS: Record<BotRole, string[]> = {
@@ -50,7 +50,7 @@ const SUGGESTIONS: Record<BotRole, string[]> = {
 const has = (q: string, ...words: string[]) => words.some((w) => q.includes(w));
 
 const ABOUT =
-  "FitWish is a gym management app. Members track membership, session time, workouts, diet, attendance and progress. Trainers manage their clients, plans and attendance. Admins handle memberships, approvals, payments, holidays and reports.";
+  "Fitwish is a gym management app. Members track membership, session time, workouts, diet, attendance and progress. Trainers manage their clients, plans and attendance. Admins handle memberships, approvals, payments, holidays and reports.";
 
 function answerUser(q: string, d: UserBundle | undefined): string | null {
   if (!d) return null;
@@ -195,7 +195,7 @@ function reply(role: BotRole, raw: string, data: unknown): string {
   if (!q) return "Ask me anything about the app.";
   if (has(q, "hi", "hello", "hey") && q.length <= 12) return GREETING[role];
   if (has(q, "thank", "thanks")) return "Happy to help! Anything else?";
-  if (has(q, "what is fitwish", "about", "what can this app", "what does this app")) return ABOUT;
+  if (has(q, "what is Fitwish", "about", "what can this app", "what does this app")) return ABOUT;
   if (has(q, "what can you", "help me", "options", "commands")) {
     return `You can ask things like: ${SUGGESTIONS[role].map((s) => `"${s}"`).join(", ")}.`;
   }
@@ -254,7 +254,7 @@ export function HelpBot({ role }: { role: BotRole }) {
           <Bot size={17} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[14px] font-bold text-ink">Ask FitWish Assistant</span>
+          <span className="block text-[14px] font-bold text-ink">Ask Fitwish Assistant</span>
           <span className="block text-[12.5px] text-ink-2">
             Instant answers about your sessions, dues and how the app works
           </span>
@@ -262,7 +262,7 @@ export function HelpBot({ role }: { role: BotRole }) {
         <Sparkles size={15} className="shrink-0 text-brand" />
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="FitWish Assistant">
+      <Modal open={open} onClose={() => setOpen(false)} title="Fitwish Assistant">
         <div className="flex max-h-[58dvh] min-h-[240px] flex-col gap-2.5 overflow-y-auto pr-0.5">
           {msgs.map((m) => (
             <div key={m.id} className={m.from === "me" ? "flex justify-end" : "flex justify-start"}>

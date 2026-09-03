@@ -103,7 +103,7 @@ export default function UserSettings() {
 
   return (
     <div>
-      <PageHeader title="Settings" subtitle="Make FitWish yours" />
+      <PageHeader title="Settings" subtitle="Make Fitwish yours" />
 
       {/* Account */}
       <section className="card overflow-hidden">
@@ -210,9 +210,9 @@ export default function UserSettings() {
               <CircleHelp size={17} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[14px] font-bold text-ink">About FitWish</span>
+              <span className="block text-[14px] font-bold text-ink">About Fitwish</span>
               <span className="block text-[12.5px] leading-relaxed text-ink-2">
-                FitWish is a premium gym platform: memberships, trainers, guided workouts, progress tracking and attendance — in one calm app.
+                Fitwish is a premium gym platform: memberships, trainers, guided workouts, progress tracking and attendance — in one calm app.
               </span>
             </span>
           </span>

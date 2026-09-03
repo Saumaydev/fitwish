@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: `%s · ${APP_NAME}`,
   },
   description:
-    "FitWish — a premium gym management and member experience platform. Memberships, trainers, workouts, progress and more.",
+    "Fitwish — a premium gym management and member experience platform. Memberships, trainers, workouts, progress and more.",
   icons: { icon: "/icon.svg" },
 };
 

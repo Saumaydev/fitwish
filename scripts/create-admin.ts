@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/* FitWish — create the first ADMIN account.                           */
+/* Fitwish — create the first ADMIN account.                           */
 /*                                                                     */
 /*   npx tsx scripts/create-admin.ts "you@gym.com" "StrongPass@123" "Your Name"
 /*                                                                     */

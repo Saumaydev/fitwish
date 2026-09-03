@@ -288,7 +288,7 @@ export async function approveMember(adminUid: string, memberUid: string): Promis
   await audit(adminUid, "approve_member", "user", memberUid, { name: user.name });
   await createNotification(memberUid, {
     type: NOTIF_TYPES.MEMBER_APPROVED,
-    title: "Welcome to FitWish!",
+    title: "Welcome to Fitwish!",
     body: "Your membership account was approved by the gym admin. You can now sign in.",
     actionRef: "/app/user/home",
   });
@@ -302,7 +302,7 @@ export async function rejectMember(adminUid: string, memberUid: string): Promise
   await createNotification(memberUid, {
     type: NOTIF_TYPES.MEMBER_REJECTED,
     title: "Registration declined",
-    body: "Your FitWish registration was declined. Please contact the gym front desk.",
+    body: "Your Fitwish registration was declined. Please contact the gym front desk.",
   });
 }
 
