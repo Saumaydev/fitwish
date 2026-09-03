@@ -46,7 +46,7 @@ export default function AdminMembers() {
       <div className="mb-3 flex flex-wrap items-center gap-2.5">
         <div className="relative min-w-0 flex-1">
           <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
-          <Input placeholder="Search name, email or phone…" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search members" />
+          <Input placeholder="      Search name, email or phone…" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search members" />
         </div>
       </div>
 
