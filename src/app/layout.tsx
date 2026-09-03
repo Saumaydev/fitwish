@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   },
   description:
     "Fitwish — a premium gym management and member experience platform. Memberships, trainers, workouts, progress and more.",
-  icons: { icon: "/icon.svg" },
+  icons: { icon: "/images/fitwish-logo.png" },
 };
 
 export const viewport: Viewport = {
