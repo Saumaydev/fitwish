@@ -21,7 +21,7 @@ export default function TrainerClients() {
 
       <div className="relative mb-4">
         <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
-        <Input placeholder="Search clients…" className="pl-10" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search clients" />
+        <Input placeholder="       Search clients…" className="pl-10" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search clients" />
       </div>
 
       {isLoading ? (
