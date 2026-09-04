@@ -36,11 +36,20 @@ interface ExDraft {
   sets: string;
   reps: string;
   weight: string;
+  time: string;
   rest: string;
   instructions: string;
 }
 
-const emptyDraft: ExDraft = { name: "", sets: "3", reps: "10", weight: "", rest: "90", instructions: "" };
+const emptyDraft: ExDraft = {
+  name: "",
+  sets: "3",
+  reps: "10",
+  weight: "",
+  time: "",
+  rest: "90",
+  instructions: ""
+};
 
 interface MealDraft {
   mealId?: string;
@@ -118,14 +127,15 @@ export default function ClientDetail() {
     } else {
       const ex = exercises[index]!;
       setDraft({
-        exerciseId: ex.exerciseId,
-        name: ex.name,
-        sets: String(ex.sets),
-        reps: String(ex.reps),
-        weight: ex.weight ? String(ex.weight) : "",
-        rest: String(ex.rest ?? 0),
-        instructions: ex.instructions ?? "",
-      });
+  exerciseId: ex.exerciseId,
+  name: ex.name,
+  sets: String(ex.sets),
+  reps: String(ex.reps),
+  weight: ex.weight ? String(ex.weight) : "",
+  time: ex.time ? String(ex.time) : "",
+  rest: String(ex.rest ?? 0),
+  instructions: ex.instructions ?? "",
+});
     }
     setDraftOpen(true);
   };
@@ -136,15 +146,16 @@ export default function ClientDetail() {
       return;
     }
     const ex: WorkoutExercise = {
-      exerciseId: draft.exerciseId ?? `ex-${Date.now()}`,
-      name: draft.name.trim(),
-      sets: Math.max(1, parseInt(draft.sets) || 1),
-      reps: draft.reps.trim() || "—",
-      weight: draft.weight ? Number(draft.weight) || draft.weight : null,
-      rest: Math.max(0, parseInt(draft.rest) || 0),
-      instructions: draft.instructions.trim(),
-      order: draftIndex ?? exercises.length,
-    };
+  exerciseId: draft.exerciseId ?? `ex-${Date.now()}`,
+  name: draft.name.trim(),
+  sets: Math.max(1, parseInt(draft.sets) || 1),
+  reps: draft.reps.trim() || "—",
+  weight: draft.weight ? Number(draft.weight) || draft.weight : null,
+  time: draft.time.trim() === "" ? null : Math.max(1, parseInt(draft.time) || 1),
+  rest: Math.max(0, parseInt(draft.rest) || 0),
+  instructions: draft.instructions.trim(),
+  order: draftIndex ?? exercises.length,
+};
     const next = [...exercises];
     if (draftIndex === null) next.push(ex);
     else next[draftIndex] = ex;
@@ -617,6 +628,19 @@ export default function ClientDetail() {
               <Input type="number" inputMode="decimal" min={0} placeholder="60" value={draft.weight} onChange={(e) => setDraft((d) => ({ ...d, weight: e.target.value }))} />
             </Field>
           </div>
+<Field label="Time (optional)">
+  <Input
+    type="number"
+    min="1"
+    inputMode="numeric"
+    placeholder="e.g. 60"
+    value={draft.time}
+    onChange={(e) => setDraft({ ...draft, time: e.target.value })}
+  />
+  <p className="mt-1 text-[11px] text-ink-3">
+    Duration in seconds. Leave empty for no timer.
+  </p>
+</Field>
           <Field label="Rest (seconds)" hint="Countdown shown between sets.">
             <Input type="number" inputMode="numeric" min={0} placeholder="90" value={draft.rest} onChange={(e) => setDraft((d) => ({ ...d, rest: e.target.value }))} />
           </Field>

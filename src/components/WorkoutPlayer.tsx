@@ -68,7 +68,64 @@ function RestTimer({ onFinished }: { onFinished: () => void }) {
     </div>
   );
 }
+function ExerciseTimer({
+  duration,
+  onFinished,
+}: {
+  duration: number;
+  onFinished: () => void;
+}) {
+  const [remaining, setRemaining] = useState(duration);
+  const [started, setStarted] = useState(false);
+  const finishedRef = useRef(false);
 
+  useEffect(() => {
+    setRemaining(duration);
+    setStarted(false);
+    finishedRef.current = false;
+  }, [duration]);
+
+  useEffect(() => {
+    if (!started || remaining <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setRemaining((value) => Math.max(0, value - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [started, remaining]);
+
+  useEffect(() => {
+    if (!started || remaining > 0 || finishedRef.current) return;
+
+    finishedRef.current = true;
+    onFinished();
+  }, [started, remaining, onFinished]);
+
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+
+  if (!started) {
+  const minutes = Math.floor(duration / 60);
+  const seconds = duration % 60;
+  const formattedTime = `${minutes}:${String(seconds).padStart(2, "0")}`;
+
+  return (
+    <Button
+      size="sm"
+      onClick={() => setStarted(true)}
+    >
+      Start · {formattedTime}
+    </Button>
+  );
+}
+
+  return (
+    <span className="badge badge-neutral tabular">
+      Time {minutes}:{String(seconds).padStart(2, "0")}
+    </span>
+  );
+}
 export function WorkoutPlayer({ onExit }: { onExit: () => void }) {
   const router = useRouter();
   const toast = useToast();
@@ -348,14 +405,35 @@ export function WorkoutPlayer({ onExit }: { onExit: () => void }) {
                   </h2>
 
                   <div className="mt-4 flex items-center justify-center gap-2">
-                    <span className="badge badge-neutral tabular">
-                      {ex.sets} sets × {String(ex.reps)} reps
-                    </span>
-                    {typeof ex.weight === "number" || (typeof ex.weight === "string" && ex.weight) ? (
-                      <span className="badge badge-brand tabular">{String(ex.weight)} kg</span>
-                    ) : null}
-                    {ex.rest > 0 && <span className="badge badge-neutral tabular">Rest {fmtDuration(ex.rest)}</span>}
-                  </div>
+  <span className="badge badge-neutral tabular">
+    {ex.sets} sets × {String(ex.reps)} reps
+  </span>
+
+  {typeof ex.weight === "number" || (typeof ex.weight === "string" && ex.weight) ? (
+    <span className="badge badge-brand tabular">
+      {String(ex.weight)} kg
+    </span>
+  ) : null}
+
+  {ex.time != null && ex.time > 0 && (
+  <ExerciseTimer
+    duration={ex.time}
+    onFinished={() => {
+      if (isLast) {
+        setFinishOpen(true);
+      } else {
+        s.advance();
+      }
+    }}
+  />
+)}
+
+  {ex.rest > 0 && (
+    <span className="badge badge-neutral tabular">
+      Rest {fmtDuration(ex.rest)}
+    </span>
+  )}
+</div>
 
                   {ex.instructions && (
                     <p className="mt-4 rounded-2xl bg-surface-2 p-3.5 text-center text-[12.5px] leading-relaxed text-ink-2">

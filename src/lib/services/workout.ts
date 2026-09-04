@@ -36,17 +36,18 @@ export async function savePlanForClient(
     throw new ApiError(403, "You can only edit plans for your assigned clients.");
   }
   const cleaned = exercises
-    .filter((e) => e.name && e.name.trim())
-    .map((e, i) => ({
-      ...e,
-      name: e.name.trim(),
-      sets: Number(e.sets) || 1,
-      reps: e.reps || "—",
-      rest: Number(e.rest) || 0,
-      instructions: (e.instructions || "").trim(),
-      order: i,
-      exerciseId: e.exerciseId || randomUUID(),
-    }));
+  .filter((e) => e.name && e.name.trim())
+  .map((e, i) => ({
+    ...e,
+    name: e.name.trim(),
+    sets: Number(e.sets) || 1,
+    reps: e.reps || "—",
+    time: e.time == null ? null : Math.max(1, Number(e.time) || 1),
+    rest: Number(e.rest) || 0,
+    instructions: (e.instructions || "").trim(),
+    order: i,
+    exerciseId: e.exerciseId || randomUUID(),
+  }));
 
   const id = `plan_${clientUid}`;
   const [existing] = await db.select({ id: workoutPlans.id }).from(workoutPlans).where(eq(workoutPlans.id, id)).limit(1);

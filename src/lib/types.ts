@@ -26,7 +26,8 @@ export interface WorkoutExercise {
   sets: number;
   reps: string | number;
   weight: string | number | null;
-  rest: number; // seconds
+  time: number | null; // exercise duration in seconds
+  rest: number; // rest duration in seconds
   instructions: string;
   order: number;
 }
